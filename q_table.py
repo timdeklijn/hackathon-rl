@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 class QTable:
     def __init__(self, env):
         self.env = env
-        self.max_episodes = 1000
+        self.max_episodes = 10000
         self.gamma = 0.9
 
         self.Q = np.zeros((16, 4))
@@ -35,9 +35,20 @@ class QTable:
                 tot_reward += reward
                 state = new_state
             print(f"{ep}: {reward}")
+        self.show_policy()
+
+    def show_policy(self):
+        state = self.env.reset()
+        done = False
+        while not done:
+            action = np.argmax(self.Q[state, :])
+            new_state, reward, done, _ = self.env.step(action)
+            env.render()
+            state = new_state
+            time.sleep(0.1)
 
     def change_epsilon(self, ep):
-        return 1.0 / ((ep // 100) + 1)
+        return 1.0 / ((ep // 1000) + 1)
 
     def plot_epsilon(self):
         x, y = zip(*[[i, self.change_epsilon(i)] for i in range(self.max_episodes)])
