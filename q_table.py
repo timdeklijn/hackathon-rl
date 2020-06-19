@@ -1,6 +1,7 @@
 from gym.envs.registration import register
 import gym
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -8,25 +9,35 @@ class QTable:
     def __init__(self, env):
         self.env = env
         self.max_episodes = 1000
-        self.epsilon = 0.99
+        self.gamma = 0.9
+
+        self.Q = np.zeros((16, 4))
 
     def run(self):
-        one_count = 0
         for ep in range(self.max_episodes):
+            tot_reward = 0
+            epsilon = self.change_epsilon(ep)
             done = False
             state = self.env.reset()
-            tot_reward = 0
             while not done:
-                action = self.env.action_space.sample()
+
+                if np.random.rand() < epsilon:
+                    action = self.env.action_space.sample()
+                else:
+                    action = np.argmax(self.Q[state, :])
+
                 new_state, reward, done, _ = self.env.step(action)
+
+                self.Q[state, action] = reward + (
+                    self.gamma * np.max(self.Q[new_state])
+                )
+
                 tot_reward += reward
-            if tot_reward == 1.0:
-                one_count += 1
-        print(f"Reached the goal {one_count} times!!")
+                state = new_state
+            print(f"{ep}: {reward}")
 
     def change_epsilon(self, ep):
-        # should reduce self.epsilon based on episode number
-        return self.epsilon * ep
+        return 1.0 / ((ep // 100) + 1)
 
     def plot_epsilon(self):
         x, y = zip(*[[i, self.change_epsilon(i)] for i in range(self.max_episodes)])
@@ -44,8 +55,8 @@ if __name__ == "__main__":
     env = gym.make("FrozenLakeNoSlip-v1")
 
     q_table = QTable(env)
-    q_table.plot_epsilon()
-    # q_table.run()
+    # q_table.plot_epsilon()
+    q_table.run()
 
     # print(state)
 
