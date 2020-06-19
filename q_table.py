@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 class QTable:
     def __init__(self, env):
         self.env = env
-        self.max_episodes = 10000
+        self.max_episodes = 1000
         self.gamma = 0.9
         self.reward_list = []
 
@@ -38,8 +38,17 @@ class QTable:
                 state = new_state
             print(f"{ep}: {reward}")
             self.reward_list.append(reward)
-        self.show_policy()
         self.plot_cummulative_reward()
+        self.show_policy()
+        self.plot_highest_q_values()
+
+    def plot_highest_q_values(self):
+        max_list = np.array([max(q) for q in self.Q])
+        max_list = max_list.reshape((4, 4))
+        plt.clf()
+        plt.imshow(max_list)
+        plt.colorbar()
+        plt.show()
 
     def show_policy(self):
         state = self.env.reset()
@@ -62,10 +71,10 @@ class QTable:
         plt.plot(x, y)
         plt.xlabel("episode")
         plt.ylabel("cummulative reward")
-        plt.show()
+        plt.savefig("cummuative_reward.png")
 
     def change_epsilon(self, ep):
-        return 1.0 / ((ep // 1000) + 1)
+        return 1.0 / ((ep // 100) + 1)
 
     def plot_epsilon(self):
         x, y = zip(*[[i, self.change_epsilon(i)] for i in range(self.max_episodes)])
