@@ -8,11 +8,13 @@ import matplotlib.pyplot as plt
 class QTable:
     def __init__(self, env):
         self.env = env
-        self.max_episodes = 1000
+        self.max_episodes = 10000
+        self.epsilon_scale_value = 1000
         self.gamma = 0.9
         self.reward_list = []
 
-        self.Q = np.zeros((16, 4))
+        self.size = int(np.sqrt(self.env.observation_space.n))
+        self.Q = np.zeros((self.env.observation_space.n, 4))
         self.plot_epsilon()
 
     def run(self):
@@ -39,26 +41,36 @@ class QTable:
             print(f"{ep}: {reward}")
             self.reward_list.append(reward)
         self.plot_cummulative_reward()
-        self.show_policy()
-        self.plot_highest_q_values()
+        state_list = self.show_policy()
+        self.plot_highest_q_values(state_list)
 
-    def plot_highest_q_values(self):
+    def plot_highest_q_values(self, state_list):
         max_list = np.array([max(q) for q in self.Q])
-        max_list = max_list.reshape((4, 4))
+        max_list = max_list.reshape((self.size, self.size))
+        print(state_list)
+        xc, yc = [], []
+        for state in state_list:
+            xc.append(state % self.size)
+            yc.append(state // self.size)
         plt.clf()
         plt.imshow(max_list)
         plt.colorbar()
+        plt.scatter(xc, yc, c="r")
         plt.show()
 
     def show_policy(self):
+        state_list = []
         state = self.env.reset()
         done = False
+        state_list.append(state)
         while not done:
             action = np.argmax(self.Q[state, :])
             new_state, reward, done, _ = self.env.step(action)
             env.render()
             state = new_state
+            state_list.append(new_state)
             time.sleep(0.1)
+        return state_list
 
     def plot_cummulative_reward(self):
         x = [i for i, _ in enumerate(self.reward_list)]
@@ -74,7 +86,7 @@ class QTable:
         plt.savefig("cummuative_reward.png")
 
     def change_epsilon(self, ep):
-        return 1.0 / ((ep // 100) + 1)
+        return 1.0 / ((ep // self.epsilon_scale_value) + 1)
 
     def plot_epsilon(self):
         x, y = zip(*[[i, self.change_epsilon(i)] for i in range(self.max_episodes)])
@@ -89,7 +101,7 @@ if __name__ == "__main__":
     register(
         id="FrozenLakeNoSlip-v1",
         entry_point="gym.envs.toy_text:FrozenLakeEnv",
-        kwargs={"map_name": "4x4", "is_slippery": False},
+        kwargs={"map_name": "8x8", "is_slippery": False},
     )
 
     env = gym.make("FrozenLakeNoSlip-v1")
