@@ -10,8 +10,10 @@ class QTable:
         self.env = env
         self.max_episodes = 10000
         self.gamma = 0.9
+        self.reward_list = []
 
         self.Q = np.zeros((16, 4))
+        self.plot_epsilon()
 
     def run(self):
         for ep in range(self.max_episodes):
@@ -35,7 +37,9 @@ class QTable:
                 tot_reward += reward
                 state = new_state
             print(f"{ep}: {reward}")
+            self.reward_list.append(reward)
         self.show_policy()
+        self.plot_cummulative_reward()
 
     def show_policy(self):
         state = self.env.reset()
@@ -47,13 +51,29 @@ class QTable:
             state = new_state
             time.sleep(0.1)
 
+    def plot_cummulative_reward(self):
+        x = [i for i, _ in enumerate(self.reward_list)]
+        tot = 0
+        y = []
+        for r in self.reward_list:
+            tot += r
+            y.append(tot)
+        plt.clf()
+        plt.plot(x, y)
+        plt.xlabel("episode")
+        plt.ylabel("cummulative reward")
+        plt.show()
+
     def change_epsilon(self, ep):
         return 1.0 / ((ep // 1000) + 1)
 
     def plot_epsilon(self):
         x, y = zip(*[[i, self.change_epsilon(i)] for i in range(self.max_episodes)])
         plt.plot(x, y)
-        plt.show()
+        plt.xlabel("episode")
+        plt.ylabel("epsilon")
+        plt.title("Epsilon / episode")
+        plt.savefig("epsilon.png")
 
 
 if __name__ == "__main__":
